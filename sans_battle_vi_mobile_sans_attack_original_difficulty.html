@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SANS HẬU BÉO - TRẬN CHIẾN</title>
+<style>
+  @font-face {
+    font-family: 'Determination';
+    src: local('Courier New');
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: #000;
+    color: #fff;
+    font-family: 'Determination', 'Courier New', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #game {
+    width: 640px;
+    max-width: 100vw;
+    padding: 20px;
+  }
+
+  /* status bar */
+  #statusbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  #statusbar .name { color: #ffe23e; }
+  #sans-hpbar {
+    width: 120px;
+    height: 18px;
+    background: #700;
+    border: 2px solid #fff;
+  }
+  #sans-hpfill {
+    height: 100%;
+    background: #ffe23e;
+    width: 100%;
+    transition: width .2s;
+  }
+  #sans-hptext { font-size: 20px; }
+  #lvbox { margin-left: auto; font-size: 20px; opacity: .8; }
+
+  /* dialogue box */
+  #dialogue {
+    border: 4px solid #fff;
+    background: #000;
+    min-height: 110px;
+    padding: 16px 20px;
+    font-size: 26px;
+    line-height: 1.5;
+    position: relative;
+    display: flex;
+    gap: 16px;
+  }
+  #sans-portrait {
+    width: 84px;
+    height: 70px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+  #dialogue-text {
+    white-space: pre-wrap;
+  }
+  #continue-hint {
+    position: absolute;
+    bottom: 8px;
+    right: 16px;
+    font-size: 18px;
+    color: #ffe23e;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* battle box */
+  #battlebox {
+    display: none;
+    border: 4px solid #fff;
+    background: #000;
+    width: 100%;
+    height: 260px;
+    margin-top: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  #soul {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #ff1a3c;
+    clip-path: polygon(50% 0%, 90% 35%, 75% 100%, 25% 100%, 10% 35%);
+    filter: drop-shadow(0 0 4px #ff1a3caa);
+  }
+  #soul-label {
+    position: absolute;
+    font-size: 13px;
+    color: #ff6b81;
+    white-space: nowrap;
+    text-shadow: 1px 1px 0 #000;
+    pointer-events: none;
+  }
+  .bone {
+    position: absolute;
+    background: #fff;
+    border-radius: 3px;
+    box-shadow: 0 0 4px #fff;
+  }
+
+  #menu {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  #menu button {
+    flex: 1;
+    font-family: inherit;
+    font-size: 22px;
+    background: #000;
+    color: #ffe23e;
+    border: 3px solid #ffe23e;
+    padding: 10px 0;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+  #menu button:hover { background: #ffe23e; color: #000; }
+  #menu button:disabled { opacity: .3; cursor: default; }
+  #menu button:disabled:hover { background:#000; color:#ffe23e; }
+
+  #hint {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #888;
+    text-align: center;
+  }
+
+  #gameover {
+    display: none;
+    text-align: center;
+    padding: 40px 0;
+    font-size: 30px;
+    color: #ff1a3c;
+  }
+  #gameover button {
+    margin-top: 20px;
+    font-family: inherit;
+    font-size: 20px;
+    background: #000;
+    color: #fff;
+    border: 3px solid #fff;
+    padding: 10px 26px;
+    cursor: pointer;
+  }
+
+@media (max-width:700px){
+html,body{width:100%;min-height:100%;overflow:auto;touch-action:manipulation}
+#game{width:100%;max-width:100%;min-height:100vh;padding:10px}
+#statusbar{gap:7px;font-size:clamp(14px,4vw,20px);flex-wrap:wrap}
+#sans-hpbar{width:min(120px,28vw);height:16px}
+#sans-hptext,#lvbox{font-size:clamp(13px,3.5vw,18px)}
+#dialogue{min-height:100px;padding:10px;gap:8px;font-size:clamp(17px,5vw,25px)}
+#sans-portrait{width:clamp(78px,27vw,125px)!important;height:clamp(65px,23vw,100px)!important}
+#battlebox{height:min(48vh,300px);min-height:210px;margin-top:10px}
+#menu{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#menu button{font-size:clamp(16px,4.5vw,21px);min-height:48px}
+#hint{font-size:13px}
+#touch-controls{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);justify-content:center;gap:7px;margin:12px auto 4px;user-select:none;-webkit-user-select:none}
+#touch-controls button{border:2px solid #fff;background:#000;color:#fff;font-family:inherit;font-size:25px;border-radius:5px;touch-action:none;-webkit-tap-highlight-color:transparent}
+#touch-controls button:active{background:#fff;color:#000}
+#touch-controls .up{grid-column:2;grid-row:1}
+#touch-controls .left{grid-column:1;grid-row:2}
+#touch-controls .down{grid-column:2;grid-row:2}
+#touch-controls .right{grid-column:3;grid-row:2}
+#soul-label{font-size:11px}
+}
+@media (min-width:701px){#touch-controls{display:none}}
+
+
+/* Sans trong trận đấu */
+#sans-battle{
+  position:absolute;
+  width:82px;height:94px;
+  left:calc(50% - 41px);top:12px;
+  z-index:3;
+  transition:transform .12s,left .12s,top .12s;
+  pointer-events:none;
+}
+#sans-battle .sans-body{
+  position:absolute;left:17px;top:31px;width:48px;height:43px;
+  background:#3a6bd8;border-radius:18px 18px 14px 14px;
+  box-shadow:0 4px 0 #254a9e;
+}
+#sans-battle .sans-eye{
+  position:absolute;top:13px;width:20px;height:20px;
+  background:#fff;border-radius:50%;z-index:2;
+}
+#sans-battle .left-eye{left:16px}
+#sans-battle .right-eye{right:16px}
+#sans-battle .sans-eye:after{
+  content:'';position:absolute;width:7px;height:7px;left:6px;top:7px;background:#050708;border-radius:50%;
+}
+#sans-battle .left-eye:after{background:#38c8ff;box-shadow:0 0 7px #38c8ff}
+#sans-battle .sans-mouth{
+  position:absolute;z-index:4;left:31px;top:25px;width:20px;height:5px;
+  background:#111;border-radius:0 0 8px 8px;
+}
+#sans-battle .sans-arm{
+  position:absolute;z-index:1;top:38px;width:16px;height:37px;background:#3a6bd8;border-radius:9px;
+}
+#sans-battle .left-arm{left:6px;transform:rotate(18deg)}
+#sans-battle .right-arm{right:6px;transform:rotate(-18deg)}
+#sans-battle .sans-pocket{
+  position:absolute;z-index:5;left:28px;top:58px;width:27px;height:14px;
+  border:3px solid #284d9e;border-top:0;border-radius:0 0 10px 10px;
+}
+#sans-battle.attacking{transform:translateY(7px) scale(1.08)}
+#sans-battle.blast{transform:translateY(-4px) scale(1.13)}
+#sans-battle.blast .left-eye,
+#sans-battle.blast .right-eye{box-shadow:0 0 18px 7px #38c8ff}
+#sans-battle.blast:after{
+  content:'';
+  position:absolute;left:-95px;top:3px;width:90px;height:82px;
+  background:linear-gradient(90deg,transparent,#fff,#38c8ff);
+  opacity:.9;border-radius:50%;
+  animation:blastBeam .32s linear;
+}
+@keyframes blastBeam{from{width:10px;opacity:.2}to{width:90px;opacity:.9}}
+
+
+  #attack-warning{position:absolute;display:none;z-index:20;font-size:46px;font-weight:bold;color:#ffe23e;text-shadow:0 0 8px #fff;pointer-events:none}
+  #gaster-blaster{position:absolute;display:none;z-index:6;width:82px;height:70px;border:4px solid #fff;border-radius:45%;background:#111;transform-origin:center;pointer-events:none}
+  #gaster-blaster:before,#gaster-blaster:after{content:"";position:absolute;background:#fff;border-radius:50%}
+  #gaster-blaster:before{width:18px;height:18px;left:16px;top:18px;box-shadow:32px 0 0 #fff}
+  #gaster-blaster:after{width:54px;height:16px;left:10px;bottom:9px;background:#38c8ff;box-shadow:0 0 15px 8px #38c8ff}
+  .attack-flash{position:absolute;z-index:15;pointer-events:none;background:#fff;border-radius:50%;animation:flash .18s ease-out forwards}
+  @keyframes flash{from{opacity:1;transform:scale(.3)}to{opacity:0;transform:scale(2.5)}}
+  @keyframes blasterFire{0%{transform:scale(.5) rotate(-8deg);opacity:0}35%{transform:scale(1.08) rotate(0);opacity:1}70%{transform:scale(1.08);opacity:1}100%{transform:scale(.9);opacity:0}}
+</style>
+
+<style>
+#command-area{margin-top:12px;min-height:86px}
+#menu{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0}
+#menu button{height:58px;padding:0;background:#000;color:#ff9d00;border:3px solid #ff9d00;font-family:inherit;font-size:25px;font-weight:bold;letter-spacing:0;position:relative}
+#menu button .cmd-icon{display:none}
+#menu button.selected{background:#ff9d00;color:#000}
+#submenu{display:grid;grid-template-columns:1fr 1fr;gap:6px;border:3px solid #fff;padding:10px;min-height:70px}
+#submenu button{background:#000;color:#fff;border:0;text-align:left;padding:7px 14px;font:22px 'Courier New',monospace}
+#submenu button.selected{color:#ff3b30}
+.hidden{display:none!important}
+#attack-meter{padding:8px 0}
+.meter-title{text-align:center;font-size:17px;margin-bottom:5px}
+.meter{height:34px;border:3px solid #fff;position:relative;background:linear-gradient(90deg,#e33 0 25%,#ffdb27 25% 75%,#e33 75%);overflow:hidden}
+.meter-center{position:absolute;left:50%;top:0;bottom:0;width:3px;background:#fff;transform:translateX(-50%)}
+#meter-cursor{position:absolute;top:-3px;width:7px;height:40px;background:#fff;box-shadow:0 0 5px #fff;left:0}
+#player-status{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:21px;font-weight:bold}
+#player-hpbar{width:150px;height:18px;border:2px solid #fff;background:#700}.#player-hpfill{height:100%;background:#ffe23e}
+#player-hpfill{height:100%;background:#ffe23e}
+#arena-hint{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:13px;color:#777;z-index:10}
+#sans-battle.hit{animation:sansHit .22s steps(2)}
+@keyframes sansHit{50%{filter:brightness(4);transform:translateX(4px)} }
+@media(max-width:700px){#menu{gap:7px}#menu button{height:52px;font-size:17px}#submenu button{font-size:17px}#player-status{font-size:16px}#player-hpbar{width:105px;height:15px}.meter{height:30px}.meter-title{font-size:13px}}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="statusbar">
+    <span class="name">SANS HẬU BÉO</span>
+    <div id="sans-hpbar"><div id="sans-hpfill"></div></div>
+    <span id="sans-hptext">100 / 100</span>
+    <span id="lvbox">LV 1</span>
+  </div>
+
+  <div id="dialogue">
+    <img id="sans-portrait" alt="sans" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='56' viewBox='0 0 80 56' shape-rendering='crispEdges'><rect width='80' height='56' fill='none'/><rect x='31' y='2' width='18' height='12' fill='%23fff'/><rect x='33' y='6' width='4' height='4' fill='%2338c8ff'/><rect x='43' y='6' width='4' height='4' fill='%23050708'/><rect x='29' y='13' width='22' height='5' fill='%233a6bd8'/><rect x='15' y='22' width='50' height='18' fill='%233a6bd8'/><rect x='18' y='40' width='44' height='6' fill='%233a6bd8'/><rect x='11' y='21' width='8' height='15' fill='%233a6bd8'/><rect x='61' y='21' width='8' height='15' fill='%233a6bd8'/><rect x='25' y='34' width='30' height='4' fill='%23284d9e'/><rect x='28' y='38' width='24' height='7' fill='%23284d9e'/><rect x='25' y='46' width='11' height='6' fill='%23111'/><rect x='44' y='46' width='11' height='6' fill='%23111'/></svg>">
+    <div id="dialogue-text"></div>
+    <div id="continue-hint">▼</div>
+  </div>
+
+  <div id="battlebox">
+    <div id="arena-hint"></div>
+    <div id="soul"></div>
+    <div id="soul-label">Tú đẹp trai</div>
+    <div id="sans-battle">
+      <div class="sans-eye left-eye"></div><div class="sans-eye right-eye"></div>
+      <div class="sans-mouth"></div><div class="sans-body"></div>
+      <div class="sans-arm left-arm"></div><div class="sans-arm right-arm"></div>
+      <div class="sans-pocket"></div>
+    </div>
+    <div id="gaster-blaster"></div>
+    <div id="attack-warning">!</div>
+  </div>
+
+  <div id="command-area">
+    <div id="menu">
+      <button id="btnFight"><span class="cmd-icon">♥</span> FIGHT</button>
+      <button id="btnAct"><span class="cmd-icon">♥</span> ACT</button>
+      <button id="btnItem"><span class="cmd-icon">♥</span> ITEM</button>
+      <button id="btnMercy"><span class="cmd-icon">♥</span> MERCY</button>
+    </div>
+    <div id="submenu" class="hidden"></div>
+    <div id="attack-meter" class="hidden">
+      <div class="meter-title">PRESS Z / ENTER</div>
+      <div class="meter"><div class="meter-center"></div><div id="meter-cursor"></div></div>
+    </div>
+  </div>
+
+  <div id="player-status">
+    <span>HP</span><span id="player-hp-text">20 / 20</span><div id="player-hpbar"><div id="player-hpfill"></div></div>
+  </div>
+  <div id="hint">↑ ↓ ← → / WASD để di chuyển • Z / Enter để chọn • X / Esc để quay lại</div>
+
+  <div id="touch-controls" aria-label="điều khiển cảm ứng">
+    <button class="up" data-key="arrowup">▲</button>
+    <button class="left" data-key="arrowleft">◀</button>
+    <button class="down" data-key="arrowdown">▼</button>
+    <button class="right" data-key="arrowright">▶</button>
+    <button class="zbtn" id="touch-z">Z</button>
+  </div>
+
+  <div id="gameover">* bạn đã chết.<br><button id="btnRestart">THỬ LẠI</button></div>
+</div>
+
+<script>
+(() => {
+  const $=id=>document.getElementById(id);
+  const dialogue=$('dialogue'), text=$('dialogue-text'), hint=$('continue-hint');
+  const battle=$('battlebox'), soul=$('soul'), label=$('soul-label'), sans=$('sans-battle');
+  const menu=$('menu'), submenu=$('submenu'), meter=$('attack-meter'), cursor=$('meter-cursor');
+  const sansFill=$('sans-hpfill'), sansText=$('sans-hptext');
+  const playerFill=$('player-hpfill'), playerText=$('player-hp-text');
+  const gameover=$('gameover'), gaster=$('gaster-blaster'), warning=$('attack-warning');
+  const keys={}; const bones=[];
+  let hp=20,maxHp=20,sansHp=1,sansMaxHp=1;
+  // Sans không thể bị hạ bằng sát thương thông thường: phải sống sót qua toàn bộ lượt.
+  const sansMaxTurns=24; let sansTurns=0; let sansExhausted=false;
+  let running=false, playerTurn=false, mode='dialogue', menuIndex=0, subIndex=0;
+  let sx=0,sy=0, moveFrame=0, boneFrame=0, invuln=false, attackAnim=0, attackDir=1;
+  let dialogueIndex=0, typing=false, typeTimer=null;
+  const lines=[
+    '* Này nhóc.',
+    '* Trên đường tới đây, cậu có để ý gì không?',
+    '* Có rất nhiều khoảng trống, đúng không.',
+    '* heh heh heh...',
+    '* thôi được rồi. tới lượt của tôi.'
+  ];
+
+  function hpUpdate(){
+    sansFill.style.width=(sansHp/sansMaxHp*100)+'%'; sansText.textContent=sansHp+' / '+sansMaxHp;
+    playerFill.style.width=(hp/maxHp*100)+'%'; playerText.textContent=hp+' / '+maxHp;
+  }
+  function say(s){ text.textContent=s; }
+  function typeLine(s){ typing=true; hint.style.visibility='hidden'; text.textContent=''; clearInterval(typeTimer); let i=0; typeTimer=setInterval(()=>{text.textContent+=s[i++];if(i>=s.length){clearInterval(typeTimer);typing=false;hint.style.visibility='visible';}},25); }
+  function advance(){
+    if(typing){clearInterval(typeTimer);text.textContent=lines[dialogueIndex];typing=false;hint.style.visibility='visible';return;}
+    dialogueIndex++; if(dialogueIndex<lines.length) typeLine(lines[dialogueIndex]); else startBattle();
+  }
+
+  dialogue.addEventListener('click',()=>{if(mode==='dialogue')advance()});
+  function startBattle(){
+    running=true; mode='battle'; playerTurn=true; sansTurns=0; sansExhausted=false; dialogue.style.display='none'; battle.style.display='block'; menu.style.display='grid'; submenu.className='hidden'; meter.className='hidden';
+    sx=battle.clientWidth/2-8; sy=battle.clientHeight/2-8; placeSoul(); hpUpdate(); clearBones(); say('* Sans chặn đường đi của bạn.'); selectMenu(0);
+    requestAnimationFrame(moveLoop); requestAnimationFrame(boneLoop);
+  }
+  function placeSoul(){soul.style.left=sx+'px';soul.style.top=sy+'px';label.style.left=(sx-22)+'px';label.style.top=(sy-18)+'px';}
+
+  function moveLoop(){
+    if(!running)return; let dx=0,dy=0;
+    if(keys.arrowleft||keys.a)dx--; if(keys.arrowright||keys.d)dx++; if(keys.arrowup||keys.w)dy--; if(keys.arrowdown||keys.s)dy++;
+    if(dx&&dy){dx*=.7071;dy*=.7071} sx=Math.max(0,Math.min(battle.clientWidth-16,sx+dx*3.4)); sy=Math.max(0,Math.min(battle.clientHeight-16,sy+dy*3.4)); placeSoul(); collisions(); moveFrame=requestAnimationFrame(moveLoop);
+  }
+  function boneLoop(){
+    if(!running)return; for(let i=bones.length-1;i>=0;i--){const b=bones[i];b.x+=b.vx;b.y+=b.vy;b.el.style.left=b.x+'px';b.el.style.top=b.y+'px';if(b.x>battle.clientWidth+30||b.y>battle.clientHeight+30||b.x+b.w<-30||b.y+b.h<-30){b.el.remove();bones.splice(i,1)}} boneFrame=requestAnimationFrame(boneLoop);
+  }
+  function collisions(){if(invuln||mode==='menu'||mode==='attack')return;const ax=sx+2,ay=sy+2;for(const b of bones){if(ax<b.x+b.w&&ax+12>b.x&&ay<b.y+b.h&&ay+12>b.y){hurt();break}}}
+  function hurt(){
+    hp=Math.max(0,hp-4); hpUpdate();
+    invuln=true; soul.style.opacity=.3;
+    // KR: sau khi dính đòn, tiếp tục mất máu trong một khoảng ngắn.
+    let kr=0; const krTimer=setInterval(()=>{
+      if(!running||mode!=='defense'||kr>=8){clearInterval(krTimer);return;}
+      hp=Math.max(0,hp-1); kr++; hpUpdate(); if(hp<=0){clearInterval(krTimer);lose();}
+    },140);
+    setTimeout(()=>{invuln=false;soul.style.opacity=1},650);
+    if(hp<=0)lose();
+  }
+  function clearBones(){bones.splice(0).forEach(b=>b.el.remove())}
+  function addBone(x,y,w,h,vx,vy,delay=0){setTimeout(()=>{if(!running||mode!=='defense')return;const el=document.createElement('div');el.className='bone';Object.assign(el.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'});battle.appendChild(el);bones.push({el,x,y,w,h,vx,vy})},delay)}
+
+  function selectMenu(i){menuIndex=(i+4)%4;[...menu.children].forEach((b,n)=>{b.classList.toggle('selected',n===menuIndex)});}
+  function openSub(type){mode='submenu';submenu.className='submenu';menu.style.display='none';let items=type==='act'?['* Check','* Joke','* Threaten','* Back']:type==='item'?['* Pie','* Legendary Hero','* Snowman Piece','* Back']:['* Spare','* Back'];submenu.innerHTML=items.map((x,i)=>`<button data-i="${i}">${x}</button>`).join('');subIndex=0;selectSub();say(type==='act'?'* Choose an ACT.':type==='item'?'* Choose an ITEM.':'* Mercy.');}
+  function selectSub(){[...submenu.children].forEach((b,i)=>b.classList.toggle('selected',i===subIndex));}
+  function backToMenu(){mode='battle';submenu.className='hidden';menu.style.display='grid';selectMenu(0);say('* Lượt của bạn.');}
+  function chooseSub(){const btn=submenu.children[subIndex];if(!btn)return;const n=+btn.dataset.i;if(btn.textContent.includes('Back'))return backToMenu();if(submenu.children.length===2&&n===0){say('* Sans nhìn bạn.\n* "heh."');enemyTurn();return;}say('* '+btn.textContent.replace('* ','')+'.');enemyTurn();}
+
+  function fight(){
+    if(!running||!playerTurn)return; playerTurn=false;mode='attack';menu.style.display='none';submenu.className='hidden';meter.className='attack-meter';attackAnim=0;attackDir=1;cursor.style.left='0%';say('* Choose the timing!');requestAnimationFrame(attackLoop);
+  }
+  function attackLoop(){if(mode!=='attack')return;attackAnim+=.018*attackDir;if(attackAnim>=1){attackAnim=1;attackDir=-1}if(attackAnim<=0){attackAnim=0;attackDir=1}cursor.style.left=(attackAnim*100)+'%';requestAnimationFrame(attackLoop)}
+  function resolveFight(){
+    if(mode!=='attack')return;
+    mode='battle'; meter.className='hidden';
+    const dist=Math.abs(attackAnim-.5);
+    const damage=Math.max(1,Math.round(30*(1-dist*2)));
+    // Sans gốc có 1 HP, nhưng né mọi đòn đánh. Thanh HP ở đây chỉ mang tính hiển thị;
+    // người chơi phải sống sót đủ lâu rồi mới có thể kết liễu hắn.
+    sansHp=1; hpUpdate();
+    sans.classList.add('hit');setTimeout(()=>sans.classList.remove('hit'),260);
+    if(sansTurns>=24){
+      sansExhausted=true;
+      say('* Sans kiệt sức.\n* "guess i am getting tired..."');
+      setTimeout(()=>win(),900);
+      return;
+    }
+    say('* Bạn đánh trúng Sans ('+damage+' sát thương).\n* ...nhưng Sans né đòn.');
+    enemyTurn();
+  }
+
+  function enemyTurn(){
+    if(sansExhausted){win();return;}
+    playerTurn=false;mode='defense';menu.style.display='none';submenu.className='hidden';clearBones();
+    sansTurns++;
+    const turn=sansTurns;
+    say('* Sans attacks.');
+    warning.style.display='block';warning.textContent='!';warning.style.left=(sx-8)+'px';warning.style.top=(sy-42)+'px';
+    setTimeout(()=>warning.style.display='none',300);
+
+    // 24 lượt: áp lực tăng dần, mô phỏng nhịp trận Sans gốc.
+    const duration=Math.max(1450,2550-turn*42);
+    const pattern=turn%6;
+
+    if(pattern===1){
+      // Xương dọc dồn liên tục, khe né hẹp.
+      const count=18;
+      for(let i=0;i<count;i++){
+        const gap=(i%2===0?Math.random()*90:Math.random()*90+battle.clientWidth-90);
+        const x=Math.max(0,Math.min(battle.clientWidth-14,gap));
+        const h=65+Math.random()*85;
+        addBone(x,-h,14,h,0,4.0+turn*.045,i*72);
+      }
+      for(let i=0;i<8;i++){
+        const y=Math.random()*(battle.clientHeight-14);
+        addBone(-80,y,80,14,4.8+turn*.05,0,420+i*105);
+      }
+    } else if(pattern===2){
+      // Xương ngang từ hai phía.
+      for(let i=0;i<16;i++){
+        const y=Math.random()*(battle.clientHeight-14);
+        const fromRight=i%2;
+        const w=65+Math.random()*100;
+        addBone(fromRight?battle.clientWidth:y, y, w,14,fromRight?-(4.5+turn*.05):(4.5+turn*.05),0,i*88);
+      }
+    } else if(pattern===3){
+      // Gaster Blaster liên tiếp ở vị trí người chơi.
+      for(let i=0;i<5;i++){
+        setTimeout(()=>{
+          if(!running||mode!=='defense')return;
+          const side=i%2;
+          const gx=side?battle.clientWidth-62:2;
+          const gy=Math.max(5,Math.min(battle.clientHeight-58,sy-24+(Math.random()*70-35)));
+          gaster.style.display='block';gaster.style.left=gx+'px';gaster.style.top=gy+'px';
+          gaster.style.transform=side?'scaleX(-1)':'scaleX(1)';
+          gaster.style.animation='blasterFire .38s ease-out forwards';
+          setTimeout(()=>{
+            if(!running||mode!=='defense')return;
+            showFlash(sx+8,sy+8,72);
+            const dir=side?-1:1;
+            addBone(side?battle.clientWidth+20:-190,Math.max(0,Math.min(battle.clientHeight-12,sy+4)),190,12,dir*(6+turn*.07),0);
+          },300);
+          setTimeout(()=>gaster.style.display='none',430);
+        },i*360);
+      }
+    } else if(pattern===4){
+      // Mưa xương + xương chạy ngang, tạo chuỗi né liên tục.
+      for(let i=0;i<24;i++){
+        const x=Math.random()*(battle.clientWidth-14);
+        const h=40+Math.random()*90;
+        addBone(x,-h,14,h,0,4.8+turn*.055,i*58);
+      }
+      for(let i=0;i<10;i++){
+        const y=Math.random()*(battle.clientHeight-14);
+        addBone(-100,y,100,14,5.5+turn*.06,0,300+i*95);
+      }
+    } else if(pattern===5){
+      // Bao vây hai phía, chỉ chừa các khe thay đổi.
+      for(let i=0;i<15;i++){
+        const y=(i*(battle.clientHeight/15)+Math.random()*18)%battle.clientHeight;
+        const fromRight=i%2;
+        addBone(fromRight?battle.clientWidth+10:-100,y,100,14,fromRight?-(5+turn*.06):(5+turn*.06),0,i*78);
+      }
+      for(let i=0;i<10;i++){
+        const x=Math.random()*(battle.clientWidth-14), h=75+Math.random()*80;
+        addBone(x,-h,14,h,0,4.6+turn*.05,500+i*80);
+      }
+    } else {
+      // Cuối chu kỳ: blaster + xương tốc độ cao.
+      for(let i=0;i<4;i++){
+        setTimeout(()=>{
+          if(!running||mode!=='defense')return;
+          const gx=Math.max(0,Math.min(battle.clientWidth-62,sx-31));
+          const gy=i%2?5:battle.clientHeight-63;
+          gaster.style.display='block';gaster.style.left=gx+'px';gaster.style.top=gy+'px';
+          gaster.style.animation='blasterFire .34s ease-out forwards';
+          setTimeout(()=>{if(running&&mode==='defense')showFlash(sx+8,sy+8,78)},250);
+          setTimeout(()=>gaster.style.display='none',390);
+        },i*330);
+      }
+      for(let i=0;i<18;i++){
+        const x=Math.random()*(battle.clientWidth-14),h=45+Math.random()*70;
+        addBone(x,-h,14,h,0,5.2+turn*.06,250+i*65);
+      }
+    }
+
+    setTimeout(()=>finishDefense(),duration);
+  }
+  function finishDefense(){if(!running)return;clearBones();mode='battle';playerTurn=true;menu.style.display='grid';say('* Lượt của bạn.');selectMenu(0)}
+  function showFlash(x,y,size){const f=document.createElement('div');f.className='attack-flash';f.style.cssText=`width:${size}px;height:${size}px;left:${x-size/2}px;top:${y-size/2}px`;battle.appendChild(f);setTimeout(()=>f.remove(),220)}
+
+  function activate(){
+    if(mode==='dialogue')return advance();
+    if(mode==='attack')return resolveFight();
+    if(mode==='submenu')return chooseSub();
+    if(mode!=='battle'||!playerTurn)return;
+    if(menuIndex===0)fight(); else if(menuIndex===1)openSub('act'); else if(menuIndex===2)openSub('item'); else openSub('mercy');
+  }
+  function back(){if(mode==='submenu'||mode==='attack'){backToMenu();return}if(mode==='battle'){selectMenu(0)}}
+
+  window.addEventListener('keydown',e=>{
+    const k=e.key.toLowerCase();keys[k]=true;
+    if(['arrowup','arrowdown','arrowleft','arrowright',' ','enter'].includes(k))e.preventDefault();
+    if(k==='z'||k==='enter'||k===' ')activate();
+    if(k==='x'||k==='escape')back();
+    if(mode==='battle'&&playerTurn){if(k==='arrowleft')selectMenu(menuIndex-1);if(k==='arrowright')selectMenu(menuIndex+1);if(k==='arrowup')selectMenu(menuIndex-2);if(k==='arrowdown')selectMenu(menuIndex+2)}
+    if(mode==='submenu'){if(k==='arrowup')subIndex=(subIndex-1+submenu.children.length)%submenu.children.length;if(k==='arrowdown')subIndex=(subIndex+1)%submenu.children.length;selectSub()}
+  });
+  window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+  document.querySelectorAll('#touch-controls button[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();keys[k]=false}))});
+  $('touch-z').addEventListener('pointerdown',e=>{e.preventDefault();activate()});
+  $('btnFight').onclick=()=>{selectMenu(0);activate()};$('btnAct').onclick=()=>{selectMenu(1);activate()};$('btnItem').onclick=()=>{selectMenu(2);activate()};$('btnMercy').onclick=()=>{selectMenu(3);activate()};
+  $('btnRestart').onclick=()=>location.reload();
+
+  function lose(){running=false;mode='dead';cancelAnimationFrame(moveFrame);cancelAnimationFrame(boneFrame);clearBones();battle.style.display='none';gameover.style.display='block';}
+  function win(){running=false;mode='win';clearBones();menu.style.display='none';meter.className='hidden';say('* Sans đã bị đánh bại.');}
+
+  typeLine(lines[0]);hpUpdate();
+})();
+</script>
+</body>
+</html>
